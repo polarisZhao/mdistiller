@@ -6,9 +6,10 @@ from ._base import Distiller
 
 
 def single_stage_at_loss(f_s, f_t, p):
+    # _at -> 将多个通道压缩到单通道
     def _at(feat, p):
         return F.normalize(feat.pow(p).mean(1).reshape(feat.size(0), -1))
-
+    # 使用 adaptive avg pool 对齐 student 和 teacher 的宽度和高度
     s_H, t_H = f_s.shape[2], f_t.shape[2]
     if s_H > t_H:
         f_s = F.adaptive_avg_pool2d(f_s, (t_H, t_H))
@@ -18,6 +19,7 @@ def single_stage_at_loss(f_s, f_t, p):
 
 
 def at_loss(g_s, g_t, p):
+    # 对不同的 feature 分别计算 at_loss
     return sum([single_stage_at_loss(f_s, f_t, p) for f_s, f_t in zip(g_s, g_t)])
 
 
@@ -40,6 +42,7 @@ class AT(Distiller):
 
         # losses
         loss_ce = self.ce_loss_weight * F.cross_entropy(logits_student, target)
+        # 对特征层计算 AT Loss
         loss_feat = self.feat_loss_weight * at_loss(
             feature_student["feats"][1:], feature_teacher["feats"][1:], self.p
         )
