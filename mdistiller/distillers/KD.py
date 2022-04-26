@@ -4,6 +4,8 @@ import torch.nn.functional as F
 
 from ._base import Distiller
 
+# Hinton 论文, 比较原始的蒸馏方法
+# kd_loss = t^2 * kl_div(softmax(S^/T), softmax(T^/T))
 
 def kd_loss(logits_student, logits_teacher, temperature):
     log_pred_student = F.log_softmax(logits_student / temperature, dim=1)
